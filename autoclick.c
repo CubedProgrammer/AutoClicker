@@ -1,10 +1,11 @@
+#include<process.h>
 #include<windows.h>
 #include<stdio.h>
-#include<cpctu_other_funcs.h>
-void autoclick(cpctu_arg_type vp);
+unsigned autoclick(void *vp);
 volatile int delay = 1000;
 volatile char left = 'O';
 volatile char right = 'P';
+volatile char toggle = 0;
 int main(int argl, char *argv[])
 {
 	char cmd[256];
@@ -24,7 +25,7 @@ int main(int argl, char *argv[])
 	input[3] = input[1];
 	input[2].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
 	input[3].mi.dwFlags = MOUSEEVENTF_LEFTUP;
-	cpctu_create_thread(autoclick, input);
+	_beginthreadex(NULL, 0, autoclick, input, 0, NULL);
 
 	do
 	{
@@ -35,31 +36,45 @@ int main(int argl, char *argv[])
 			scanf(" %c", &left);
 		else if(strcmp(cmd, "right") == 0)
 			scanf(" %c", &right);
+		else if(strcmp(cmd, "toggle") == 0)
+			toggle = ~toggle;
 	}
 	while(strcmp(cmd, "quit"));
 
 	free(input);
 	return 0;
 }
-void autoclick(cpctu_arg_type vp)
+unsigned autoclick(void *vp)
 {
 	puts("Delay is set to one second by default, left mouse button is O and right mouse button is P.");
 	puts("Type command delay to change delay, left to change key for left mouse button, right to change key for right mouse button, and type quit to quit.");
 	fflush(stdout);
 	LPINPUT input=(LPINPUT)vp;
-	for(;;)
+	char lt = 0, rt = 0;
+	char cl = 0, cr = 0;
+	char ll = 0, lr = 0;
+	for(;;Sleep(delay))
 	{
-		if(GetKeyState(right) >> 15)
+		cl = GetKeyState(left) >> 15;
+		cr = GetKeyState(right) >> 15;
+		if(toggle)
 		{
+			if(ll&&!cl)
+				lt = !lt;
+			if(lr&&!cr)
+				rt = !rt;
+			ll = cl;
+			lr = cr;
+		}
+		else
+		{
+			lt = cl;
+			rt = cr;
+		}
+		if(rt)
 			SendInput(2,input,sizeof(*input));
-			if(delay)
-				cpctu_sleep_thread(delay);
-		}
-		else if(GetKeyState(left) >> 15)
-		{
+		if(lt)
 			SendInput(2,input+2,sizeof(*input));
-			if(delay)
-				cpctu_sleep_thread(delay);
-		}
 	}
+	return 0;
 }
