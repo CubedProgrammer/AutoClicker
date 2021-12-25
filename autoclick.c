@@ -1,6 +1,7 @@
+#include<ctype.h>
 #include<process.h>
-#include<windows.h>
 #include<stdio.h>
+#include<windows.h>
 unsigned autoclick(void *vp);
 volatile int delay = 1000;
 volatile char left = 'O';
@@ -38,6 +39,8 @@ int main(int argl, char *argv[])
 			scanf(" %c", &right);
 		else if(strcmp(cmd, "toggle") == 0)
 			toggle = ~toggle;
+		left = toupper(left);
+		right = toupper(right);
 	}
 	while(strcmp(cmd, "quit"));
 
